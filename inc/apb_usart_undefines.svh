@@ -1,0 +1,4 @@
+`ifdef APB_USART_DEFINES_SVH
+`undef APB_USART_DEFINES_SVH
+`undef APB_USART_VERSION
+`endif

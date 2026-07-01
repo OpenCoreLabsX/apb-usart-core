@@ -1,0 +1,6 @@
+`ifndef APB_USART_DEFINES_SVH
+`define APB_USART_DEFINES_SVH
+
+`define APB_USART_VERSION 32'h0001_0000
+
+`endif
