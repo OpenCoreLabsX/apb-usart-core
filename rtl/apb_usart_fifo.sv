@@ -42,11 +42,11 @@ module apb_usart_fifo
     end else begin
       if (i_usart_wr_en && !o_usart_full) begin
         r_mem[r_wr_ptr] <= i_usart_wr_data;
-        r_wr_ptr        <= r_wr_ptr + {{(PTR_WIDTH-1){1'b0}}, 1'b1};
+        r_wr_ptr        <= (r_wr_ptr == PTR_WIDTH'(DEPTH - 1)) ? '0 : r_wr_ptr + {{(PTR_WIDTH-1){1'b0}}, 1'b1};
       end
 
       if (i_usart_rd_en && !o_usart_empty) begin
-        r_rd_ptr <= r_rd_ptr + {{(PTR_WIDTH-1){1'b0}}, 1'b1};
+        r_rd_ptr <= (r_rd_ptr == PTR_WIDTH'(DEPTH - 1)) ? '0 : r_rd_ptr + {{(PTR_WIDTH-1){1'b0}}, 1'b1};
       end
 
       unique case ({i_usart_wr_en && !o_usart_full, i_usart_rd_en && !o_usart_empty})

@@ -1,0 +1,5 @@
+theme: jekyll-theme-cayman
+title: APB USART IP Core
+description: 🚀 High-performance, silicon-proven APB USART/UART core for MCU, SoC, and RISC-V systems.
+plugins:
+  - jekyll-seo-tag

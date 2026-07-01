@@ -57,6 +57,7 @@ module apb_usart_rx
 
   logic        r_rxd_sync1;
   logic        r_rxd_sync2;
+  logic        r_rxd_sync3;
   logic        r_rxd_filt;
 
   logic        r_parity_err;
@@ -73,11 +74,13 @@ module apb_usart_rx
     if (!i_usart_rst_n) begin
       r_rxd_sync1 <= 1'b1;
       r_rxd_sync2 <= 1'b1;
+      r_rxd_sync3 <= 1'b1;
       r_rxd_filt  <= 1'b1;
     end else begin
       r_rxd_sync1 <= i_usart_rxd;
       r_rxd_sync2 <= r_rxd_sync1;
-      r_rxd_filt  <= r_rxd_sync2;
+      r_rxd_sync3 <= r_rxd_sync2;
+      r_rxd_filt  <= (r_rxd_sync1 & r_rxd_sync2) | (r_rxd_sync2 & r_rxd_sync3) | (r_rxd_sync1 & r_rxd_sync3);
     end
   end
 

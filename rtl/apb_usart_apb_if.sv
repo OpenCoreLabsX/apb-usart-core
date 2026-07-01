@@ -64,7 +64,7 @@ module apb_usart_apb_if
 
   assign o_usart_pready = 1'b1;
   assign w_apb_write    = i_usart_psel && i_usart_penable && i_usart_pwrite;
-  assign w_apb_read     = i_usart_psel && !i_usart_pwrite;
+  assign w_apb_read     = i_usart_psel && i_usart_penable && !i_usart_pwrite;
 
   always_comb begin
     unique case (i_usart_paddr)
@@ -81,7 +81,10 @@ module apb_usart_apb_if
     endcase
   end
 
-  assign o_usart_pslverr = (i_usart_psel && i_usart_penable) && !w_addr_valid;
+  logic w_tx_full_err;
+  assign w_tx_full_err = w_apb_write && (i_usart_paddr == APB_USART_ADDR_TXDATA) && i_usart_tx_full;
+  
+  assign o_usart_pslverr = ((i_usart_psel && i_usart_penable) && !w_addr_valid) | w_tx_full_err;
 
   assign o_usart_tx_wr_en   = w_apb_write && (i_usart_paddr == APB_USART_ADDR_TXDATA)
                                            && !i_usart_tx_full;
@@ -125,11 +128,13 @@ module apb_usart_apb_if
       r_irq_stat <= 32'd0;
       r_fifoctrl <= 32'd0;
     end else begin
-      if (i_usart_tx_done)     r_irq_stat[0] <= 1'b1;
-      if (i_usart_rx_done)     r_irq_stat[1] <= 1'b1;
-      if (i_usart_parity_err)  r_irq_stat[2] <= 1'b1;
-      if (i_usart_frame_err)   r_irq_stat[3] <= 1'b1;
-      if (i_usart_overrun_err) r_irq_stat[4] <= 1'b1;
+      logic [31:0] w_hw_set;
+      logic [31:0] w_sw_clear;
+      
+      w_hw_set = {27'd0, i_usart_overrun_err, i_usart_frame_err, i_usart_parity_err, i_usart_rx_done, i_usart_tx_done};
+      w_sw_clear = (w_apb_write && w_addr_valid && (i_usart_paddr == APB_USART_ADDR_IRQ_STAT)) ? apply_strb(32'd0, i_usart_pwdata, i_usart_pstrb) : 32'd0;
+
+      r_irq_stat <= (r_irq_stat & ~w_sw_clear) | w_hw_set;
 
       r_fifoctrl <= 32'd0;
 
@@ -138,7 +143,6 @@ module apb_usart_apb_if
           APB_USART_ADDR_CTRL    : r_ctrl     <= apply_strb(r_ctrl, i_usart_pwdata, i_usart_pstrb);
           APB_USART_ADDR_BAUDDIV : r_bauddiv  <= apply_strb(r_bauddiv, i_usart_pwdata, i_usart_pstrb);
           APB_USART_ADDR_IRQ_EN  : r_irq_en   <= apply_strb(r_irq_en, i_usart_pwdata, i_usart_pstrb);
-          APB_USART_ADDR_IRQ_STAT: r_irq_stat <= r_irq_stat & ~apply_strb(32'd0, i_usart_pwdata, i_usart_pstrb);
           APB_USART_ADDR_FIFOCTRL: r_fifoctrl <= apply_strb(32'd0, i_usart_pwdata, i_usart_pstrb);
           default: ;
         endcase
